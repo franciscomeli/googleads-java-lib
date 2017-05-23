@@ -59,11 +59,25 @@
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.3</version>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <!-- bind to the packaging phase -->
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
-          <descriptors>
-            <descriptor>src/main/assembly/dependencies.xml</descriptor>
-          </descriptors>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <archive>
+            <manifest>
+              <mainClass>dfp.axis.v201702.inventoryservice.CreateAdUnits</mainClass>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
       <plugin>

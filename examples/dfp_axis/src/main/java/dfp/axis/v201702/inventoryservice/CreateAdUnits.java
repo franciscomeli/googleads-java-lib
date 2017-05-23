@@ -17,16 +17,32 @@ package dfp.axis.v201702.inventoryservice;
 import com.google.api.ads.common.lib.auth.OfflineCredentials;
 import com.google.api.ads.common.lib.auth.OfflineCredentials.Api;
 import com.google.api.ads.dfp.axis.factory.DfpServices;
+import com.google.api.ads.dfp.axis.utils.v201702.StatementBuilder;
 import com.google.api.ads.dfp.axis.v201702.AdUnit;
+import com.google.api.ads.dfp.axis.v201702.AdUnitPage;
 import com.google.api.ads.dfp.axis.v201702.AdUnitSize;
 import com.google.api.ads.dfp.axis.v201702.AdUnitTargetWindow;
 import com.google.api.ads.dfp.axis.v201702.EnvironmentType;
 import com.google.api.ads.dfp.axis.v201702.InventoryServiceInterface;
 import com.google.api.ads.dfp.axis.v201702.NetworkServiceInterface;
 import com.google.api.ads.dfp.axis.v201702.Size;
+import com.google.api.ads.dfp.axis.v201702.TargetPlatform;
 import com.google.api.ads.dfp.lib.client.DfpSession;
 import com.google.api.client.auth.oauth2.Credential;
+import com.google.common.collect.Iterables;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+
+import static java.lang.String.format;
 
 /**
  * This example creates new ad units. To determine which ad units exist, run
@@ -37,7 +53,7 @@ import java.util.Random;
  */
 public class CreateAdUnits {
 
-  public static void runExample(DfpServices dfpServices, DfpSession session)
+  public static void runExample(DfpServices dfpServices, DfpSession session, String filePath)
       throws Exception {
     // Get the InventoryService.
     InventoryServiceInterface inventoryService =
@@ -47,56 +63,150 @@ public class CreateAdUnits {
     NetworkServiceInterface networkService =
         dfpServices.get(session, NetworkServiceInterface.class);
 
-    // Set the parent ad unit's ID for all ad units to be created under.
-    String parentAdUnitId = networkService.getCurrentNetwork().getEffectiveRootAdUnitId();
+      BufferedReader csv = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), "UTF8"));
+      String line;
+      Map<String, List<AdUnit>> adUnitsMap = new HashMap<String, List<AdUnit>>();
+      List<String> levelKeys = new ArrayList<>();
+      System.out.println("Loading CSV file");
+      int counter = 0;
+      while ((line = csv.readLine()) != null) {
+          System.out.println(format("Processing line %s:%s", counter, line));
+          String[] splitLine = line.split("\t");
+          AdUnit webAdUnit = new AdUnit();
+          webAdUnit.setName(splitLine[2].trim());
+          webAdUnit.setAdUnitCode(splitLine[1].trim());
+//          webAdUnit.setTargetPlatform(TargetPlatform.WEB);
+          webAdUnit.setTargetWindow(AdUnitTargetWindow.BLANK);
+          webAdUnit.setAdUnitSizes(fillAdUnitsSizeFromLine(splitLine[4].trim()));
+          webAdUnit.setParentId(splitLine[3].trim());
+          List<AdUnit> adUnits = adUnitsMap.get(splitLine[0].trim());
+          if (adUnits == null) {
+              adUnits = new ArrayList<AdUnit>();
+              adUnitsMap.put(splitLine[0].trim(), adUnits);
+              levelKeys.add(splitLine[0].trim());
+          }
+          adUnits.add(webAdUnit);
+          counter++;
+      }
+      csv.close();
+      System.out.println(format("%s lines were read from csv", counter));
 
-    // Create a 300x250 web ad unit size.
-    Size webSize = new Size();
-    webSize.setWidth(300);
-    webSize.setHeight(250);
-    webSize.setIsAspectRatio(false);
-
-    AdUnitSize webAdUnitSize = new AdUnitSize();
-    webAdUnitSize.setSize(webSize);
-    webAdUnitSize.setEnvironmentType(EnvironmentType.BROWSER);
-
-    // Create a 640x360v video ad unit size with a companion.
-    Size videoSize = new Size();
-    videoSize.setWidth(640);
-    videoSize.setHeight(360);
-    videoSize.setIsAspectRatio(false);
-
-    AdUnitSize videoAdUnitSize = new AdUnitSize();
-    videoAdUnitSize.setSize(videoSize);
-    videoAdUnitSize.setCompanions(new AdUnitSize[] {webAdUnitSize});
-    videoAdUnitSize.setEnvironmentType(EnvironmentType.VIDEO_PLAYER);
-
-    // Create a web ad unit.
-    AdUnit webAdUnit = new AdUnit();
-    webAdUnit.setName("web_ad_unit_" + new Random().nextInt(Integer.MAX_VALUE));
-    webAdUnit.setDescription(webAdUnit.getName());
-    webAdUnit.setParentId(parentAdUnitId);
-    webAdUnit.setTargetWindow(AdUnitTargetWindow.BLANK);
-    webAdUnit.setAdUnitSizes(new AdUnitSize[]{webAdUnitSize});
-
-    // Create a video ad unit.
-    AdUnit videoAdUnit = new AdUnit();
-    videoAdUnit.setName("video_ad_unit_" + new Random().nextInt(Integer.MAX_VALUE));
-    videoAdUnit.setDescription(videoAdUnit.getName());
-    videoAdUnit.setParentId(parentAdUnitId);
-    videoAdUnit.setTargetWindow(AdUnitTargetWindow.BLANK);
-    videoAdUnit.setAdUnitSizes(new AdUnitSize[]{videoAdUnitSize});
-
-    // Create the ad units on the server.
-    AdUnit[] adUnits = inventoryService.createAdUnits(new AdUnit[] {webAdUnit, videoAdUnit});
-
-    for (AdUnit adUnit : adUnits) {
-      System.out.printf("An ad unit with ID '%s', name '%s' was created.%n", adUnit.getId(),
-          adUnit.getName());
-    }
+      Map<String, AdUnit> createdAdUnitMap = new HashMap<String, AdUnit>();
+      System.out.println("Creating L1 elements");
+      createL1AdUnit(createdAdUnitMap, adUnitsMap, inventoryService, networkService);
+      System.out.println("Creating L-n elements");
+      createLnAdUnit(createdAdUnitMap, adUnitsMap, inventoryService, networkService, levelKeys);
+      System.out.println("AdsUnits were created");
   }
 
-  public static void main(String[] args) throws Exception {
+    private static AdUnitSize[] fillAdUnitsSizeFromLine(String sizes) {
+
+        AdUnitSize[] adUnitSizes;
+        System.out.println("Size" + sizes + ";");
+        if (!"".equals(sizes)) {
+            String[] sizeAsCollection = sizes.split(";");
+            adUnitSizes = new AdUnitSize[sizeAsCollection.length];
+            for (int i = 0; i < sizeAsCollection.length; i++) {
+                System.out.println(format("Adding new size: %s", sizeAsCollection[i]));
+                String[] widthAndHeight = sizeAsCollection[i].split("x");
+                Size webSize = new Size();
+                webSize.setWidth(new Integer(widthAndHeight[0]));
+                webSize.setHeight(new Integer(widthAndHeight[1]));
+                webSize.setIsAspectRatio(false);
+                AdUnitSize webAdUnitSize = new AdUnitSize();
+                webAdUnitSize.setSize(webSize);
+                webAdUnitSize.setEnvironmentType(EnvironmentType.BROWSER);
+                adUnitSizes[i] = webAdUnitSize;
+            }
+        } else {
+            adUnitSizes = new AdUnitSize[] {};
+        }
+        return adUnitSizes;
+
+    }
+
+    private static void createLnAdUnit(Map<String, AdUnit> createdAdUnitMap, Map<String, List<AdUnit>> adUnitsMap,
+            InventoryServiceInterface inventoryService, NetworkServiceInterface networkService, List<String> levelKeys) {
+        try {
+            for (String key: levelKeys) {
+                if (!"1".equals(key)) {
+                    AdUnit[] createdAdUnits;
+
+                    for (AdUnit adUnit : adUnitsMap.get(key)) {
+//                        System.out.println(format("Setting parent for %s createdAdUnitMap.get(%s)=%s", adUnit.getAdUnitCode(),adUnit.getParentId(), createdAdUnitMap.get(adUnit.getParentId()).getAdUnitCode()));
+                        String parentAdUnitId = createdAdUnitMap.get(adUnit.getParentId()).getId();
+//                        System.out.println(format("Got parent id %s for AdUnit %s", parentAdUnitId, adUnit.getAdUnitCode()));
+                        adUnit.setParentId(parentAdUnitId);
+                    }
+                    createdAdUnits = inventoryService.createAdUnits(adUnitsMap.get(key).toArray(new AdUnit[] {}));
+                    for (AdUnit adUnit : createdAdUnits) {
+                        createdAdUnitMap.put(adUnit.getAdUnitCode(), adUnit);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private static Map<String, AdUnit> createL1AdUnit(Map<String, AdUnit> createdAdUnitMap, Map<String, List<AdUnit>> adUnitsMap,
+            InventoryServiceInterface inventoryService, NetworkServiceInterface networkService) {
+        AdUnit[] createdAdUnits = null;
+        try {
+            String parentAdUnitId = networkService.getCurrentNetwork().getEffectiveRootAdUnitId();
+            for (AdUnit adUnit : adUnitsMap.get("1")) {
+                adUnit.setParentId(parentAdUnitId);
+            }
+            createdAdUnits = inventoryService.createAdUnits(adUnitsMap.get("1").toArray(new AdUnit[] {}));
+        } catch (Exception e) {
+            if (e.toString().contains("UniqueError.NOT_UNIQUE")) {
+                System.out.println("*** NOT UNIQUE AD UNIT DETECTED, TRYING TO RECOVER... ***");
+                createdAdUnits = adUnitsMap.get("1").toArray(new AdUnit[] {});
+                for (AdUnit adUnit : createdAdUnits) {
+                    AdUnit dfpAdUnit = getAdUnitFromDFP(inventoryService, adUnit.getAdUnitCode());
+                    if (dfpAdUnit != null) {
+                        System.out.printf("*** Got adUnit from DFP, setting ID to %s for %s ***%n", dfpAdUnit.getId(), dfpAdUnit.getAdUnitCode());
+                        adUnit.setId(dfpAdUnit.getId());
+                    } else {
+                        throw new RuntimeException("Se produjo un error tratando de obtener la L1 de DFP", e);
+                    }
+                }
+            } else {
+                e.printStackTrace();
+                throw new RuntimeException("Se produjo un error. Verificar el encoding del archivo debe estar en UTF without BOM", e);
+            }
+        }
+        for (AdUnit adUnit : createdAdUnits) {
+            createdAdUnitMap.put(adUnit.getAdUnitCode(), adUnit);
+        }
+        return createdAdUnitMap;
+    }
+
+    private static AdUnit getAdUnitFromDFP(InventoryServiceInterface inventoryService, String adUnitCode) {
+        // Create a statement to only select a single ad unit by ID.
+        StatementBuilder statementBuilder = new StatementBuilder()
+                .where("adUnitCode = :adUnitCode")
+                .orderBy("id ASC")
+                .limit(1)
+                .withBindVariableValue("adUnitCode", adUnitCode);
+
+        // Get the ad unit.
+        AdUnitPage page = null;
+        try {
+            page = inventoryService.getAdUnitsByStatement(statementBuilder.toStatement());
+            AdUnit adUnit = Iterables.getOnlyElement(Arrays.asList(page.getResults()));
+            return adUnit;
+        } catch (RemoteException e) {
+            System.out.printf("*** EXCEPTION WHEN TRYING TO GET ADUNIT %s FROM DFP ***%n", adUnitCode);
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static void main(String[] args) throws Exception {
     // Generate a refreshable OAuth2 credential.
     Credential oAuth2Credential = new OfflineCredentials.Builder()
         .forApi(Api.DFP)
@@ -112,6 +222,6 @@ public class CreateAdUnits {
 
     DfpServices dfpServices = new DfpServices();
 
-    runExample(dfpServices, session);
+    runExample(dfpServices, session, args[0]);
   }
 }
