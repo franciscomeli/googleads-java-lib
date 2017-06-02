@@ -2,6 +2,8 @@ Instrucciones para el uso de la herramienta
 ===========================================================
 
 1. Contar con Java 7 instalado (JRE o JDK).
+2. Descarga el archivo .jar a ejecutar:
+    * Para creación de arboles de categoras nuevos: https://github.com/mcvitanich/googleads-java-lib/blob/create-adunits/examples/dfp_axis/target/dfp-axis-examples-3.2.0-jar-with-dependencies.jar (botón "Download").
 2. Contar con el archivo de autenticación en formato .json que contiene la clave de acceso a la API de DFP.
 3. Copiar el contenido del archivo [ads.properties](https://github.com/mcvitanich/googleads-java-lib/blob/create-adunits/examples/dfp_axis/src/main/resources/ads.properties) y guardarlo en la carpeta de inicio/home del usuario (Por ejemplo en Windows: "C:\Users\Federico").
 4. Editar el archivo ads.properties, en la linea 16:
