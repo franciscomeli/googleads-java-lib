@@ -3,11 +3,12 @@ Instrucciones para el uso de la herramienta
 
 1. Contar con Java 7 instalado.
 2. Descarga el archivo .jar a ejecutar:
-    * Para creación de arboles de categoras nuevos: https://github.com/mcvitanich/googleads-java-lib/blob/create-adunits/examples/dfp_axis/target/dfp-axis-examples-3.2.0-jar-with-dependencies.jar (botón "Download").
-    * Para actualización de ad units para editar los tamaños: https://github.com/mcvitanich/googleads-java-lib/blob/update-adunits/examples/dfp_axis/target/dfp-axis-examples-3.2.0-jar-with-dependencies.jar
-2. Contar con el archivo de autenticación en formato .json que contiene la clave de acceso a la API de DFP.
-3. Copiar el contenido del archivo [ads.properties](https://github.com/mcvitanich/googleads-java-lib/blob/create-adunits/examples/dfp_axis/src/main/resources/ads.properties) y guardarlo en la carpeta de inicio/home del usuario (Por ejemplo en Windows: "C:\Users\Federico").
-4. Editar el archivo ads.properties, en la linea 16:
+  * Para creación de arboles de categorías nuevos: [descargar este jar](https://github.com/mcvitanich/googleads-java-lib/blob/create-adunits/examples/dfp_axis/target/dfp-axis-examples-3.2.0-jar-with-dependencies.jar)
+  * Para actualización de ad units para editar los tamaños: [descargar este jar](https://github.com/mcvitanich/googleads-java-lib/blob/update-adunits/examples/dfp_axis/target/dfp-axis-examples-3.2.0-jar-with-dependencies.jar)
+    
+3. Contar con el archivo de autenticación en formato .json que contiene la clave de acceso a la API de DFP.
+4. Copiar el contenido del archivo [ads.properties](https://github.com/mcvitanich/googleads-java-lib/blob/create-adunits/examples/dfp_axis/src/main/resources/ads.properties) y guardarlo en la carpeta de inicio/home del usuario (Por ejemplo en Windows: "C:\Users\Federico").
+5. Editar el archivo ads.properties, en la linea 16:
 
     api.dfp.jsonKeyFilePath=INSERT_PATH_TO_JSON_KEY_FILE_HERE
 
@@ -16,7 +17,7 @@ Instrucciones para el uso de la herramienta
 
     api.dfp.jsonKeyFilePath=C:\\Users\\Virginia\\google_key.json
 
-5. Ejecutar la herramienta en la consola (en Windows: cmd, "command prompt" o "símbolo del sistema") con el comando:
+6. Ejecutar la herramienta en la consola (en Windows: cmd, "command prompt" o "símbolo del sistema") con el comando:
 
     java -jar <ruta/nombre del archivo> <ruta/nombre del archivo de input>
 
