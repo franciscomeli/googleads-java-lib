@@ -7,15 +7,15 @@ Instrucciones para el uso de la herramienta
   * Para actualización de ad units para editar los tamaños: [descargar este jar](https://github.com/mcvitanich/googleads-java-lib/blob/update-adunits/examples/dfp_axis/target/dfp-axis-examples-3.2.0-jar-with-dependencies.jar)
     
 3. Contar con el archivo de autenticación en formato .json que contiene la clave de acceso a la API de DFP.
-4. Copiar el contenido del archivo [ads.properties](https://github.com/mcvitanich/googleads-java-lib/blob/create-adunits/examples/dfp_axis/src/main/resources/ads.properties) y guardarlo en la carpeta de inicio/home del usuario (Por ejemplo en Windows: "C:\Users\Federico").
+4. Copiar el contenido del archivo [ads.properties](https://github.com/mcvitanich/googleads-java-lib/blob/create-adunits/examples/dfp_axis/src/main/resources/ads.properties) y guardarlo en la carpeta de inicio/home del usuario (Por ejemplo en Windows: `C:\Users\Federico`).
 5. Editar el archivo ads.properties, en la linea 16:
 
-    <section>api.dfp.jsonKeyFilePath=INSERT_PATH_TO_JSON_KEY_FILE_HERE</section>
+    ```api.dfp.jsonKeyFilePath=INSERT_PATH_TO_JSON_KEY_FILE_HERE```
 
     Reemplazar el valor "INSERT_PATH_TO_JSON_KEY_FILE_HERE" con la ruta completa al archivo de llave de autenticación (archivo .json) utilizando doble \ en lugar de una sola.
-    Por ejemplo si el archivo se llama google_key.json y se ubica en C:\Users\Virigina\google_key.json:
+    Por ejemplo si el archivo se llama google_key.json y se ubica en `C:\Users\Virigina\google_key.json`:
 
-    <section>api.dfp.jsonKeyFilePath=C:\\Users\\Virginia\\google_key.json</section>
+    ```api.dfp.jsonKeyFilePath=C:\\Users\\Virginia\\google_key.json```
 
 6. Ejecutar la herramienta en la consola (en Windows: cmd, "command prompt" o "símbolo del sistema") con el comando:
 
