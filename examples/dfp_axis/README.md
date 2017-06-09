@@ -12,7 +12,7 @@ Instrucciones para el uso de la herramienta
 
 ```api.dfp.jsonKeyFilePath=INSERT_PATH_TO_JSON_KEY_FILE_HERE```
 
-Reemplazar el valor "INSERT_PATH_TO_JSON_KEY_FILE_HERE" con la ruta completa al archivo de llave de autenticación (archivo .json) utilizando doble \ en lugar de una sola. Por ejemplo si el archivo se llama google_key.json y se ubica en C:\Users\Virigina\google_key.json:
+Reemplazar el valor "INSERT_PATH_TO_JSON_KEY_FILE_HERE" con la ruta completa al archivo de llave de autenticación (archivo .json) utilizando doble \ en lugar de una sola (sólo aplica para Windows). Por ejemplo si el archivo se llama google_key.json y se ubica en C:\Users\Virigina\google_key.json:
     
 ```api.dfp.jsonKeyFilePath=C:\\Users\\Virginia\\google_key.json```
 
